@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-namespace App\Http\Controllers;
-
 use App\Http\Requests\SaleRequest;
 use App\Models\Product;
 use App\Models\Sale;
@@ -78,7 +76,7 @@ class SaleController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        // not implemented
     }
 
     /**
@@ -86,7 +84,7 @@ class SaleController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        // not implemented
     }
 
     /**
@@ -94,6 +92,10 @@ class SaleController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $sale = Sale::findOrFail($id);
+        // If you need to delete related items or use soft deletes adjust here
+        $sale->delete();
+
+        return redirect()->route('sales.index')->with('success', 'Sale deleted successfully.');
     }
 }
