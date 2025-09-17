@@ -9,6 +9,7 @@
     @endif
 
     <a href="{{ route('products.create') }}" class="btn btn-primary">Add Product</a>
+    <a href="{{ route('sales.index') }}" class="btn btn-outline ml-2">Sales</a>
 
     <table class="table mt-3">
         <thead>
