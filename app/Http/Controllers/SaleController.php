@@ -1,0 +1,99 @@
+<?php
+
+namespace App\Http\Controllers;
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\SaleRequest;
+use App\Models\Product;
+use App\Models\Sale;
+use App\Models\User;
+use Illuminate\Http\Request;
+
+class SaleController extends Controller
+{
+    public function index(Request $request)
+    {
+        $sales = Sale::with('user', 'items.product')
+            ->when($request->filled('customer_name'), function ($query) use ($request) {
+                $query->whereHas('user', function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->customer_name . '%');
+                });
+            })
+            ->when($request->filled('product_name'), function ($query) use ($request) {
+                $query->whereHas('items.product', function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->product_name . '%');
+                });
+            })
+            ->when($request->filled('date_from') && $request->filled('date_to'), function ($query) use ($request) {
+                $query->whereBetween('created_at', [$request->date_from, $request->date_to]);
+            })
+            ->paginate(10);
+
+        $total_per_page = $sales->sum(function ($sale) {
+            return $sale->items->sum(function ($item) {
+                return ($item->price * $item->quantity) - $item->discount;
+            });
+        });
+
+        return view('sales.index', compact('sales', 'total_per_page'));
+    }
+
+    public function create()
+    {
+        $customers = User::where('role', 'customer')->get();
+        $products = Product::all();
+        return view('sales.create', compact('customers', 'products'));
+    }
+
+    public function store(SaleRequest $request)
+    {
+        $sale = Sale::create([
+            'user_id' => $request->user_id,
+            'total' => calculateSaleTotal($request->items),
+        ]);
+
+        foreach ($request->items as $item) {
+            $sale->items()->create($item);
+        }
+
+        if ($request->has('notes')) {
+            $sale->notes()->create(['note' => $request->notes]);
+        }
+
+        return response()->json(['success' => 'Sale created successfully.']);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        $sale = Sale::with('user', 'items.product', 'notes')->findOrFail($id);
+        return view('sales.show', compact('sale'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
+    }
+}
