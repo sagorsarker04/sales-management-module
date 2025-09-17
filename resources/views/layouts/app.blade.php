@@ -24,7 +24,30 @@
                     e.preventDefault();
                     if (!confirm('Delete this item?')) return;
 
-                    const action = form.getAttribute('action');
+                    var action = form.dataset.action;
+                    if (!action) {
+                        console.error('No data-action attribute found on delete form. Submitting normally.');
+                        form.submit(); // fallback to traditional submission
+                        return;
+                    }
+
+                    // If action seems to be the collection root (e.g. '/sales' or ends without an id), fall back to normal submit
+                    try {
+                        var url = new URL(action, window.location.origin);
+                    } catch (err) {
+                        // if action is relative, make absolute
+                        var url = { pathname: action };
+                    }
+
+                    var pathname = url.pathname || action;
+                    // crude check: if pathname ends with a number (id) allow AJAX delete, otherwise submit form normally
+                    if (!/\/[0-9]+\/?$/.test(pathname)) {
+                        // Not pointing to an item-specific route; submit the form normally to let server handle or show error
+                        form.removeEventListener('submit', arguments.callee);
+                        form.submit();
+                        return;
+                    }
+
                     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
                     fetch(action, {

@@ -23,6 +23,12 @@ class Sale extends Model
         return $this->hasMany(SaleItem::class);
     }
 
+
+    /**
+     * Get the notes associated with the sale.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     */
     public function notes()
     {
         return $this->morphMany(Note::class, 'noteable');

@@ -53,7 +53,7 @@
                             <td>{{ $sale->created_at->format('Y-m-d') }}</td>
                             <td>
                                 <a href="{{ route('sales.show', $sale->id) }}" class="btn btn-info">View</a>
-                                <form action="{{ route('sales.destroy', $sale->id) }}" method="POST" class="js-delete-form" style="display: inline-block;">
+                                <form action="{{ route('sales.destroy', $sale->id) }}" data-action="{{ route('sales.destroy', $sale->id) }}" data-id="{{ $sale->id }}" method="POST" class="js-delete-form" style="display: inline-block;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger">Delete</button>

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SaleController extends Controller
 {
@@ -59,7 +60,12 @@ class SaleController extends Controller
             $sale->notes()->create(['note' => $request->notes]);
         }
 
-        return response()->json(['success' => 'Sale created successfully.']);
+        // If request expects JSON (AJAX) return JSON, otherwise redirect to the created sale page
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => 'Sale created successfully.', 'sale_id' => $sale->id]);
+        }
+
+        return redirect()->route('sales.show', $sale->id)->with('success', 'Sale created successfully.');
     }
 
     /**
@@ -92,9 +98,16 @@ class SaleController extends Controller
      */
     public function destroy(string $id)
     {
+        \Illuminate\Support\Facades\Log::info("Deleting sale with ID: $id");
+
         $sale = Sale::findOrFail($id);
-        // If you need to delete related items or use soft deletes adjust here
+
+        // Use the model delete method (works with soft deletes if the model uses SoftDeletes)
         $sale->delete();
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Sale deleted successfully.']);
+        }
 
         return redirect()->route('sales.index')->with('success', 'Sale deleted successfully.');
     }
